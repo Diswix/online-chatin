@@ -2,25 +2,35 @@ const http = require('http');
 const fs = require('fs');
 const path = require('path');
 
+const indexHtmlFile = fs.readFileSync(path.join(__dirname, 'static', 'index.html'));
+const indexCssFile = fs.readFileSync(path.join(__dirname, 'static', 'style.css')); //
+const indexJsFile = fs.readFileSync(path.join(__dirname, 'static', 'script.js')); //
+
 const server = http.createServer((req, res) => {
-    const file = req.url === '/' ? 'index.html' : req.url; //
-    const filePath = path.join(__dirname, 'static', file);
-
     let contentType = 'text/plain';
-    switch (path.extname(filePath)) { //
-        case '.html': contentType = 'text/html'; break;
-        case '.css': contentType = 'text/css'; break; //
-        case '.js': contentType = 'text/javascript'; break; //
-    }
+    let content = '';
 
-    fs.readFile(filePath, (err, content) => { //
-        if (err) {
+    switch (req.url) { //
+        case '/':
+            contentType = 'text/html';
+            content = indexHtmlFile;
+            break;
+        case '/style.css': //
+            contentType = 'text/css'; //
+            content = indexCssFile; //
+            break; //
+        case '/script.js': //
+            contentType = 'text/javascript'; //
+            content = indexJsFile; //
+            break; //
+        default:
             res.statusCode = 404;
             return res.end('error 404');
-        }
-        res.writeHead(200, { 'Content-Type': contentType }); //
-        res.end(content);
-    });
+    }
+
+    res.writeHead(200, { 'Content-Type': contentType }); //
+    res.end(content);
 });
 
 server.listen(3000);
+
