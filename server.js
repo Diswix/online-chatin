@@ -2,6 +2,8 @@ const http = require('http');
 const fs = require('fs');
 const path = require('path');
 
+
+
 const indexHtmlFile = fs.readFileSync(path.join(__dirname, 'static', 'index.html'));
 const indexCssFile = fs.readFileSync(path.join(__dirname, 'static', 'style.css')); //
 const indexJsFile = fs.readFileSync(path.join(__dirname, 'static', 'script.js')); //
@@ -34,3 +36,10 @@ const server = http.createServer((req, res) => {
 
 server.listen(3000);
 
+const { Server } = require("socket.io");
+const io  = new Server(server);
+
+io.on('connection', async(socket) =>{
+    const guestNickname = 'Guest ' + Math.floor(Math.random() * 1000);
+    console.log(`${guestNickname} connected, id - ${socket.id}`);
+} );

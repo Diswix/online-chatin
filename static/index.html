@@ -7,8 +7,17 @@
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <h1>new chatin experience</h1>
-
+    <main>
+        <header class="header">
+            <h1>New chatin experience</h1>
+        </header>
+        <ul id="messages"></ul>
+        <form id="form">
+            <input type="text" id="input" placeholder="Enter message...">
+            <input type="submit" class="submit" value="Send">
+        </form>
+    </main>
+    <script src="https://cdn.socket.io/4.8.3/socket.io.min.js" integrity="sha384-kzavj5fiMwLKzzD1f8S7TeoVIEi7uKHvbTA3ueZkrzYq75pNQUiUi6Dy98Q3fxb0" crossorigin="anonymous"></script>
     <script src="script.js"></script>
 </body>
 </html>
