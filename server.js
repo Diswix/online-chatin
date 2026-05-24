@@ -1,8 +1,8 @@
 const http = require('http');
 const fs = require('fs');
 const path = require('path');
-const db = require('./database');
 
+const messageStorrage = [{login: 'someone', content: 'hello world'}]; 
 
 
 const indexHtmlFile = fs.readFileSync(path.join(__dirname, 'static', 'index.html'));
@@ -43,19 +43,16 @@ const io  = new Server(server);
 io.on('connection', async(socket) =>{
     const guestNickname = 'Guest ' + Math.floor(Math.random() * 1000);
     console.log(`${guestNickname} connected, id - ${socket.id}`);
+
+    socket.emit('all_messages', messageStorrage);
+
+    socket.on('new_message', (msg) => {
+        const newMessageObj = {login: guestNickname, content: msg};
+        messageStorrage.push(newMessageObj);
+        io.emit('message', guestNickname + ': ' + msg);
+    });
 } );
 
-try{
-    const messages = await db.getMessages();
-    socket.emit('all_messages', messages);
-} catch (e) {
-    console.error('Error loading database', e);
-}
-socket.on('new_message', async (message) => {
-    try {
-       
-        io.emit('message', guestNickname + ': ' + message);
-    } catch (e) {
-        console.error('Error saving message to db', e);
-    }
+server.listen(3000, () => {
+    console.log('listening on localhost:3000');
 });
