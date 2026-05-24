@@ -53,7 +53,7 @@ try{
 }
 socket.on('new_message', async (message) => {
     try {
-        await db.addMessage(message, null);
+       
         io.emit('message', guestNickname + ': ' + message);
     } catch (e) {
         console.error('Error saving message to db', e);

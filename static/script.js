@@ -30,6 +30,6 @@ socket.on('message', function(msg){
     window.scrollTo(0, document.body.scrollHeight);
 });
 
-server.listen(3000)
+
 
  
