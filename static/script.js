@@ -1,5 +1,14 @@
-alert("welcome, here your new experience comes")
-const socket = io();
+let userNickname = "";
+while (!userNickname || userNickname.trim() === "") {
+    userNickname = prompt("Please enter your nickname for the chat:");
+}
+
+alert("welcome, here your new experience comes");
+const socket = io({
+    auth: {
+        nickname: userNickname
+    }
+});
 
 const messages = document.getElementById('messages');
 const form = document.getElementById('form');
