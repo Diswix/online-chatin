@@ -35,8 +35,6 @@ const server = http.createServer((req, res) => {
     res.end(content);
 });
 
-server.listen(3000);
-
 const { Server } = require("socket.io");
 const io  = new Server(server);
 
