@@ -1,6 +1,7 @@
 const http = require('http');
 const fs = require('fs');
 const path = require('path');
+const db = require('./database');
 
 
 
@@ -43,3 +44,18 @@ io.on('connection', async(socket) =>{
     const guestNickname = 'Guest ' + Math.floor(Math.random() * 1000);
     console.log(`${guestNickname} connected, id - ${socket.id}`);
 } );
+
+try{
+    const messages = await db.getMessages();
+    socket.emit('all_messages', messages);
+} catch (e) {
+    console.error('Error loading database', e);
+}
+socket.on('new_message', async (message) => {
+    try {
+        await db.addMessage(message, null);
+        io.emit('message', guestNickname + ': ' + message);
+    } catch (e) {
+        console.error('Error saving message to db', e);
+    }
+});
