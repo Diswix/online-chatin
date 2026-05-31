@@ -4,61 +4,83 @@ const path = require('path');
 const db = require('./database');
 
 const indexHtmlFile = fs.readFileSync(path.join(__dirname, 'static', 'index.html'));
-const styleFile = fs.readFileSync(path.join(__dirname, 'static', 'style.css'));
 const scriptFile = fs.readFileSync(path.join(__dirname, 'static', 'script.js'));
+const styleFile = fs.readFileSync(path.join(__dirname, 'static', 'style.css'));
 
 const server = http.createServer((req, res) => {
-    if (req.url === '/') res.setHeader('Content-Type', 'text/html');
-    if (req.url === '/style.css') res.setHeader('Content-Type', 'text/css');
-    if (req.url === '/script.js') res.setHeader('Content-Type', 'application/javascript');
+  if (req.url.startsWith('/socket.io/')) {
+    return;
+  }
 
+  if (req.method === 'GET') {
     switch (req.url) {
-        case '/': return res.end(indexHtmlFile);
-        case '/script.js': return res.end(scriptFile);
-        case '/style.css': return res.end(styleFile);
-        default:
-            res.writeHead(404);
-            return res.end('Not found');
+      case '/': return res.end(indexHtmlFile);
+      case '/script.js': return res.end(scriptFile);
+      case '/style.css': return res.end(styleFile);
+      default:
+        res.writeHead(404);
+        return res.end('Error 404: Not Found');
     }
+  }
 });
 
 const { Server } = require("socket.io");
 const io = new Server(server);
 
 io.on('connection', async (socket) => {
-    const currentNickname = socket.handshake.auth.nickname || 'Guest' + Math.floor(Math.random() * 1000);
-    const guestPassword = 'secret_password_123'; 
-    console.log(`${currentNickname} connected`);
+  const currentNickname = 'Гість_' + Math.floor(Math.random() * 1000);
+  const guestPassword = 'secret_pass_' + Math.floor(Math.random() * 1000);
+  
+  let currentUserId = null;
 
-    let currentUserId = null;
-    try {
-        const exists = await db.isUserExist(currentNickname);
-        if (!exists) {
-            await db.addUser({ login: currentNickname, password: guestPassword });
-        }
+  console.log(`Підключився: ${currentNickname}`);
 
-        const token = await db.getAuthToken({ login: currentNickname, password: guestPassword });
-        if (token) {
-            currentUserId = parseInt(token.split('.')[0]);
-        } 
-        
-        const messages = await db.getMessages();
-        socket.emit('all_messages', messages);
-    } catch (e) {
-        console.error('Auth error', e);
+  try {
+    await db.addUser({
+      login: currentNickname,
+      password: guestPassword
+    });
+    console.log(`BD Користувача ${currentNickname} створено`);
+
+    const token = await db.getAuthToken({ 
+      login: currentNickname, 
+      password: guestPassword 
+    });
+    
+    if (token) {
+      currentUserId = parseInt(token.split('.')[0]);
+      console.log(`BD ID з бази: ${currentUserId}`);
     }
 
-    socket.on('new_message', async (messageData) => {
-        if (!currentUserId) return;
-        try {
-            await db.addMessage(messageData.content, currentUserId);
-            io.emit('message', currentNickname + ': ' + messageData.content);
-        } catch (e) {
-            console.error('db error', e);
-        }
-    });
+  } catch (e) {
+    console.error(`Error BD Не вдалося створити ID:`, e);
+    currentUserId = null; 
+  }
+
+  try {
+    const messages = await db.getMessages();
+    socket.emit('all_messages', messages);
+  } catch (e) {
+    console.error("Помилка завантаження повідомлень з BD:", e);
+  }
+
+  socket.on('new_message', async (message) => {
+    if (!currentUserId) {
+      console.error(`Error: немає зв'язку з ID користувача`);
+      return;
+    }
+
+    try {
+      await db.addMessage(message, currentUserId);
+      console.log(`BD Збережено повідомлення ID ${currentUserId} (${currentNickname})`);
+      
+      io.emit('message', currentNickname + ': ' + message);
+    } catch (e) {
+      console.error("Помилка збереження повідомлення в BD:", e);
+    }
+  });
 });
 
 server.listen(3000, () => {
-    console.log('Server running at http://localhost:3000');
+  console.log('http://localhost:3000');
 });

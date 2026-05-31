@@ -28,10 +28,10 @@ dbWrapper
 
         await db.run(
             `CREATE TABLE message(
-                message_id INTEGER PRIMARY KEY AUTOINCREMENT,
+                msg_id INTEGER PRIMARY KEY AUTOINCREMENT,
                 content TEXT,
-                author INTEGER,
-                FOREIGN KEY(author) REFERENCES user(user_id)
+                autor INTEGER,
+                FOREIGN KEY(autor) REFERENCES user(user_id)
             );`
         );
       } else {
@@ -46,17 +46,17 @@ module.exports = {
   getMessages: async () => {
     try {
       return await db.all(
-        `SELECT message_id, content, login, user_id from message
-         JOIN user ON message.author = user.user_id`
+        `SELECT msg_id, content, login, user_id from message
+         JOIN user ON message.autor = user.user_id`
         );
     } catch (dbError) {
       console.error(dbError);
     }
   },
-  addMessage: async (message, userId) => {
+  addMessage: async (msg, userId) => {
     await db.run(
-      `INSERT INTO message (content, author) VALUES (?, ?)`,
-      [message, userId]
+      `INSERT INTO message (content, autor) VALUES (?, ?)`,
+      [msg, userId]
     );
   },
   isUserExist: async (login) => {
